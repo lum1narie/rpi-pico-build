@@ -10,6 +10,8 @@ RUN apt-get -y install \
     python3 \
     git \
     ninja-build \
+    doxygen \
+    graphviz \
     gosu
 
 ARG LOCAL_UID=9000 \
