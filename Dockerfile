@@ -9,6 +9,7 @@ RUN apt-get -y install \
     build-essential \
     python3 \
     git \
+    ninja-build \
     gosu
 
 ARG LOCAL_UID=9000 \
