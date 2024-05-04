@@ -1,4 +1,4 @@
-FROM debian:11.6-slim
+FROM debian:12.5-slim
 
 
 RUN apt-get -y update && apt-get -y install apt-utils
