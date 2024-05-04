@@ -3,12 +3,15 @@ ENV_GENERATOR=gen_env.sh
 ARG_GENERATOR=docker_args.sh
 ENV_FILE=.env
 
-.PHONY: env build run clean
+.PHONY: env build rebuild run clean
 
 -include $(ENV_FILE)
 
 build: env
 	docker build -t $(IMAGE) $(shell . $(ARG_GENERATOR)) .
+
+rebuild: env
+	docker build --no-cache -t $(IMAGE) $(shell . $(ARG_GENERATOR)) .
 
 env: base.env
 	$(SHELL) $(ENV_GENERATOR)
