@@ -11,21 +11,16 @@ RUN apt-get -y install \
     git \
     ninja-build \
     doxygen \
-    graphviz \
-    gosu
+    graphviz
 
-ARG LOCAL_UID=9000 \
-    LOCAL_GID=9000 \
-    LOCAL_USER=user \
-    LOCAL_GROUP=user
+ARG UID GID USER GROUP
+ENV LOCAL_USER=$USER
 
-ENV LOCAL_USER=$LOCAL_USER
+RUN groupadd -g ${GID} ${GROUP} && \
+    useradd -m -s /bin/bash -u ${UID} -g ${GID} ${USER}
 
-RUN useradd -u $LOCAL_UID -o -m $LOCAL_USER && \
-    groupmod -g $LOCAL_GID $LOCAL_GROUP
-
-WORKDIR /home/$LOCAL_USER
-USER $LOCAL_USER:$LOCAL_GROUP
+WORKDIR /home/$USER
+USER $UID:$GID
 
 RUN mkdir pico && \
     git clone https://github.com/raspberrypi/pico-sdk.git \
@@ -37,22 +32,24 @@ RUN mkdir pico && \
     git clone https://github.com/raspberrypi/pico-playground.git \
     --depth 1 --single-branch --branch master pico/pico-playground
 
-WORKDIR /home/$LOCAL_USER/pico/pico-sdk
+WORKDIR /home/$USER/pico/pico-sdk
 RUN git submodule update --init \
     --recommend-shallow --depth 1
 
-ENV PICO_SDK_PATH=/home/$LOCAL_USER/pico/pico-sdk \
-    PICO_EXAMPLES_PATH=/home/$LOCAL_USER/pico/pico-examples \
-    PICO_EXTRAS_PATH=/home/$LOCAL_USER/pico/pico-extras \
-    PICO_PLAYGROUND_PATH=/home/$LOCAL_USER/pico/pico-playground
+ENV PICO_SDK_PATH=/home/$USER/pico/pico-sdk \
+    PICO_EXAMPLES_PATH=/home/$USER/pico/pico-examples \
+    PICO_EXTRAS_PATH=/home/$USER/pico/pico-extras \
+    PICO_PLAYGROUND_PATH=/home/$USER/pico/pico-playground
 
 WORKDIR /
 
 USER root
-RUN mkdir /target && chown $LOCAL_USER:$LOCAL_GROUP /target
-COPY build_pico.sh /home/$LOCAL_USER/build_pico.sh
-RUN chmod +x /home/$LOCAL_USER/build_pico.sh
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN mkdir /target && chown $UID:$GID /target
+COPY build_pico.sh /usr/local/bin/build_pico.sh
+RUN chmod +x /usr/local/bin/build_pico.sh
 
-ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
+WORKDIR /home/$USER
+ENV CMAKE_COLOR_DIAGNOSTICS=always
+USER $UID:$GID
+
+ENTRYPOINT [ "/usr/local/bin/build_pico.sh" ]
